@@ -401,3 +401,212 @@
         });
 
         // --- DOKUNMATİK ÇİZİM MOTORU (KOORDİNAT DENGELİ) ---
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            // 🎯 Ekranda küçülen canvas koordinatlarını mantıksal 800x400 uzayına oranla geri dönüştürür.
+            return { 
+                x: (clientX - rect.left) * (canvas.width / rect.width), 
+                y: (clientY - rect.top) * (canvas.height / rect.height) 
+            };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            lastPos = getMousePos(e);
+            if(e.touches) e.preventDefault();
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const currentPos = getMousePos(e);
+
+            if (currentRoomId) {
+                push(ref(database, `rooms/${currentRoomId}/lines`), {
+                    x1: lastPos.x, y1: lastPos.y,
+                    x2: currentPos.x, y2: currentPos.y,
+                    color: currentColor, size: currentSize, tool: currentTool
+                });
+                set(ref(database, `rooms/${currentRoomId}/clear`), false);
+            } else {
+                drawLineLocal(lastPos.x, lastPos.y, currentPos.x, currentPos.y, currentColor, currentSize, currentTool);
+            }
+
+            lastPos = currentPos;
+            if(e.touches) e.preventDefault();
+        }
+
+        function drawLineLocal(x1, y1, x2, y2, color, size, tool) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineWidth = size;
+            
+            if (tool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = color;
+                ctx.shadowBlur = 3;
+                ctx.shadowColor = color;
+            }
+            
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        window.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('touchstart', startDrawing, {passive: false});
+        canvas.addEventListener('touchmove', draw, {passive: false});
+        window.addEventListener('touchend', () => isDrawing = false);
+
+        // --- SÜRÜKLE BIRAK MOTORU (MOBİL UYUMLU) ---
+        let draggedText = '';
+        let draggedClass = '';
+
+        document.querySelectorAll('.robot-token').forEach(token => {
+            token.addEventListener('dragstart', () => {
+                draggedText = token.innerText;
+                draggedClass = token.getAttribute('data-class');
+            });
+            token.addEventListener('touchstart', () => {
+                draggedText = token.innerText;
+                draggedClass = token.getAttribute('data-class');
+            }, {passive: true});
+        });
+
+        container.addEventListener('dragover', (e) => e.preventDefault());
+        container.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const rect = container.getBoundingClientRect();
+            // Oranlı koordinat eşitleme
+            const x = (e.clientX - rect.left) * (800 / rect.width);
+            const y = (e.clientY - rect.top) * (400 / rect.height);
+            addTokenRequest(x, y, draggedText, draggedClass);
+        });
+
+        // Mobil yedek tıkla-bırak desteği: Dokununca merkeze yaklaştırır
+        document.querySelectorAll('.robot-token').forEach(token => {
+            token.addEventListener('touchend', () => {
+                if(window.innerWidth <= 768) {
+                    addTokenRequest(400 + (Math.random()*60-30), 200 + (Math.random()*60-30), draggedText, draggedClass);
+                }
+            });
+        });
+
+        function addTokenRequest(x, y, text, customClass) {
+            const tokenId = 'tk_' + Date.now() + '_' + Math.floor(Math.random()*1000);
+            if (currentRoomId) {
+                set(ref(database, `rooms/${currentRoomId}/tokens/${tokenId}`), { x, y, text, customClass });
+            } else {
+                createLocalTokenElement(tokenId, x, y, text, customClass);
+            }
+        }
+
+        function updateTokensLocal(tokensData) {
+            objectLayer.innerHTML = '';
+            if(!tokensData) return;
+
+            Object.keys(tokensData).forEach(id => {
+                const t = tokensData[id];
+                createLocalTokenElement(id, t.x, t.y, t.text, t.customClass);
+            });
+        }
+
+        function createLocalTokenElement(id, x, y, text, customClass) {
+            const tokenEl = document.createElement('div');
+            tokenEl.className = `placed-token ${customClass}`;
+            tokenEl.innerText = text;
+            tokenEl.style.left = `${x}px`;
+            tokenEl.style.top = `${y}px`;
+
+            tokenEl.addEventListener('pointerdown', (e) => {
+                tokenEl.setPointerCapture(e.pointerId);
+                e.stopPropagation();
+                
+                function onPointerMove(ev) {
+                    const rect = container.getBoundingClientRect();
+                    // Oranlı kaydırma koordinat hesabı
+                    let nx = (ev.clientX - rect.left) * (800 / rect.width);
+                    let ny = (ev.clientY - rect.top) * (400 / rect.height);
+
+                    if (nx < 0) nx = 0; if (nx > 800) nx = 800;
+                    if (ny < 0) ny = 0; if (ny > 400) ny = 400;
+
+                    if(currentRoomId) {
+                        update(ref(database, `rooms/${currentRoomId}/tokens/${id}`), { x: nx, y: ny });
+                    } else {
+                        tokenEl.style.left = `${nx}px`;
+                        tokenEl.style.top = `${ny}px`;
+                    }
+                }
+
+                function onPointerUp() {
+                    tokenEl.removeEventListener('pointermove', onPointerMove);
+                    tokenEl.removeEventListener('pointerup', onPointerUp);
+                }
+
+                tokenEl.addEventListener('pointermove', onPointerMove);
+                tokenEl.addEventListener('pointerup', onPointerUp);
+            });
+
+            const removeAction = () => {
+                if(currentRoomId) {
+                    remove(ref(database, `rooms/${currentRoomId}/tokens/${id}`));
+                } else {
+                    tokenEl.remove();
+                }
+            };
+            tokenEl.addEventListener('dblclick', removeAction);
+            tokenEl.addEventListener('touchstart', (e) => {
+                if (tokenEl.dataset.lastTouch && (Date.now() - tokenEl.dataset.lastTouch < 300)) removeAction();
+                tokenEl.dataset.lastTouch = Date.now();
+            });
+
+            objectLayer.appendChild(tokenEl);
+        }
+
+        // --- ARABİRİM BUTONLARI ---
+        document.getElementById('toolPencil').addEventListener('click', () => { currentTool = 'pencil'; toggleToolBtn('toolPencil'); });
+        document.getElementById('toolEraser').addEventListener('click', () => { currentTool = 'eraser'; toggleToolBtn('toolEraser'); });
+        
+        function toggleToolBtn(id) {
+            document.getElementById('toolPencil').classList.remove('active');
+            document.getElementById('toolEraser').classList.remove('active');
+            document.getElementById(id).classList.add('active');
+        }
+
+        document.querySelectorAll('.color-dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+                dot.classList.add('active');
+                currentColor = dot.getAttribute('data-color');
+                currentTool = 'pencil'; toggleToolBtn('toolPencil');
+            });
+        });
+
+        const brushSlider = document.getElementById('brushSize');
+        brushSlider.addEventListener('input', (e) => {
+            currentSize = e.target.value;
+            document.getElementById('brushSizeVal').innerText = currentSize + 'px';
+        });
+
+        document.getElementById('btnClearAll').addEventListener('click', () => {
+            if(confirm('Tüm taktik tahtasını sıfırlamak istediğinden emin misin?')) {
+                if (currentRoomId) {
+                    remove(ref(database, `rooms/${currentRoomId}/lines`));
+                    remove(ref(database, `rooms/${currentRoomId}/tokens`));
+                    set(ref(database, `rooms/${currentRoomId}/clear`), true);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    objectLayer.innerHTML = '';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
