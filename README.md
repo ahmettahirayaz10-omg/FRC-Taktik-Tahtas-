@@ -37,6 +37,7 @@
             align-items: center;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             z-index: 10;
+            flex-shrink: 0;
         }
 
         .brand {
@@ -85,6 +86,7 @@
             display: flex;
             position: relative;
             height: calc(100vh - 55px);
+            overflow: hidden;
         }
 
         .sidebar {
@@ -145,32 +147,61 @@
         .token-red { background: rgba(255, 0, 85, 0.2); border: 2px solid var(--neon-red); color: #fff; }
         .token-note { background: rgba(255, 153, 0, 0.2); border: 2px solid var(--neon-orange); color: #fff; }
 
-        .stage { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; overflow: hidden; }
+        /* 🗺️ SAF RESPONSIVE SAHNE ALANI */
+        .stage { 
+            flex: 1; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 15px; 
+            position: relative; 
+            overflow: hidden; 
+            width: 100%;
+        }
 
+        /* 🎯 Tamamen Sıvı (Fluid) Akıllı Canvas Kutusu */
         .canvas-container {
-            position: relative; background: #0f131a; border: 3px solid #1e293b; border-radius: 12px;
+            position: relative; 
+            background: #0f131a; 
+            border: 3px solid #1e293b; 
+            border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.7);
             background-image: 
                 linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
                 linear-gradient(90deg, transparent 49.8%, rgba(255,255,255,0.15) 49.8%, rgba(255,255,255,0.15) 50.2%, transparent 50.2%);
             background-size: 20px 20px, 20px 20px, 100% 100%;
-            flex-shrink: 0;
+            
+            /* CSS Sihri: En/Boy oranını 2:1 (800x400) olarak kilitler, taşmayı engeller */
+            width: 100%;
+            max-width: 800px;
+            max-height: calc(100vh - 140px);
+            aspect-ratio: 2 / 1;
         }
 
-        canvas { display: block; border-radius: 10px; position: absolute; top: 0; left: 0; z-index: 1; }
+        canvas { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 10px; 
+            z-index: 1; 
+        }
+        
         .object-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
 
+        /* Robot simgelerinin boyutu ve yüzdesel konumu */
         .placed-token {
             position: absolute; pointer-events: auto; transform: translate(-50%, -50%);
-            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
             font-size: 11px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: move; touch-action: none;
         }
 
         .info-overlay { position: absolute; bottom: 15px; right: 20px; background: rgba(18, 22, 32, 0.85); border: 1px solid var(--border-neon); padding: 6px 12px; border-radius: 6px; font-size: 11px; color: #64748b; z-index: 4; }
 
-        /* 📱 MOBİL RESPONSIVE TASARIM AYARLARI */
-        @media (max-width: 768px) {
+        /* 📱 ULTRA GELİŞMİŞ MOBİL VE YATAY EKRAN DÜZENİ */
+        @media (max-width: 950px) {
             header {
                 padding: 8px 12px;
                 flex-direction: column;
@@ -183,45 +214,46 @@
             .room-status { font-size: 11px; padding: 4px 8px; }
 
             .dashboard-container {
-                flex-direction: column-reverse; /* Menüyü alta alarak taktik alanına yer açıyoruz */
+                flex-direction: column-reverse;
                 height: calc(100vh - 65px);
             }
 
             .sidebar {
                 width: 100%;
                 height: auto;
+                min-height: 110px;
                 max-height: 110px;
                 flex-direction: row;
-                overflow-x: auto; /* Yana kaydırılabilir menü */
+                display: flex;
+                overflow-x: auto;
                 overflow-y: hidden;
                 padding: 8px;
                 gap: 15px;
                 border-right: none;
                 border-top: 2px solid var(--border-neon);
-                white-space: nowrap;
-                display: block;
             }
 
             .panel-section {
-                display: inline-block;
-                vertical-align: top;
-                margin-bottom: 0;
-                min-width: 120px;
+                flex-shrink: 0;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                min-width: 110px;
             }
             .panel-section h3 { font-size: 10px; margin-bottom: 4px; }
-            .grid-2, .color-grid, .token-bank { display: flex; gap: 4px; }
-            .color-dot { width: 28px; height: 28px; }
-            .robot-token { padding: 6px 10px; font-size: 11px; min-width: 38px; }
+            .grid-2, .color-grid, .token-bank { display: flex; gap: 5px; }
+            .color-dot { width: 26px; height: 26px; }
+            .robot-token { padding: 6px 10px; font-size: 11px; min-width: 36px; }
             
             .panel-section[style*="margin-top:auto;"] {
                 margin-top: 0 !important;
-                display: inline-flex;
-                align-items: center;
-                height: 100%;
+                align-self: center;
             }
-            #btnClearAll { padding: 6px 10px; font-size: 11px; }
+            #btnClearAll { padding: 6px 10px; font-size: 11px; white-space: nowrap; }
 
-            .stage { padding: 5px; }
+            .stage { padding: 8px; }
+            .canvas-container { max-height: calc(100vh - 200px); }
+            .placed-token { width: 28px; height: 28px; font-size: 9px; }
             .info-overlay { bottom: auto; top: 10px; right: 10px; font-size: 10px; padding: 3px 6px; }
         }
     </style>
@@ -256,9 +288,9 @@
                     <div class="color-dot" style="background: var(--neon-orange);" data-color="#ff9900"></div>
                 </div>
             </div>
-            <div class="panel-section" style="min-width: 150px;">
+            <div class="panel-section" style="min-width: 140px;">
                 <h3>Fırça Kalınlığı</h3>
-                <div style="display:flex; gap:10px; align-items:center; margin-top: 4px;">
+                <div style="display:flex; gap:10px; align-items:center; margin-top: 2px;">
                     <input type="range" id="brushSize" min="2" max="12" value="4" style="flex:1; accent-color: var(--neon-blue);">
                     <span id="brushSizeVal" style="font-size:12px; width:20px;">4px</span>
                 </div>
@@ -280,7 +312,7 @@
         </aside>
 
         <main class="stage">
-            <div class="canvas-container" id="canvasContainer" style="width: 800px; height: 400px;">
+            <div class="canvas-container" id="canvasContainer">
                 <div style="position:absolute; width:25%; height:100%; border-right:2px dashed rgba(255,0,85,0.2); top:0; left:0; pointer-events:none;"></div>
                 <div style="position:absolute; width:25%; height:100%; border-left:2px dashed rgba(0,150,255,0.2); top:0; right:0; pointer-events:none;"></div>
                 <canvas id="paintCanvas" width="800" height="400"></canvas>
@@ -305,11 +337,9 @@
             appId: "1:512624589369:web:7768cc3d6b67c865216be8"
         };
 
-        // Firebase Başlatma
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
 
-        // --- DOM ELEMENTLERİ VE DEĞİŞKENLER ---
         const canvas = document.getElementById('paintCanvas');
         const ctx = canvas.getContext('2d');
         const container = document.getElementById('canvasContainer');
@@ -328,31 +358,6 @@
 
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-
-        // --- 📐 DİNAMİK MOBİL ÖLÇEKLENDİRME MOTORU ---
-        function resizeBoard() {
-            const stage = document.querySelector('.stage');
-            if (!stage || !container) return;
-
-            // Ekrandaki boş alanı hesapla (padding çıkartarak)
-            const padding = window.innerWidth <= 768 ? 10 : 40;
-            const availableWidth = stage.clientWidth - padding;
-            const availableHeight = stage.clientHeight - padding;
-            
-            const baseWidth = 800;
-            const baseHeight = 400;
-
-            // En uygun küçültme oranını bul (En boy oranını koruyarak)
-            let scale = Math.min(availableWidth / baseWidth, availableHeight / baseHeight);
-            if (scale > 1) scale = 1; // Bilgisayarda gereksiz büyütme yapma
-
-            // CSS Transform ile tüm paneli milimetrik küçült
-            container.style.transform = `scale(${scale})`;
-            container.style.transformOrigin = 'center center';
-        }
-
-        window.addEventListener('resize', resizeBoard);
-        setTimeout(resizeBoard, 150); // Sayfa açılışında tetikle
 
         // --- CANLI ODA KONTROLÜ ---
         function switchRoom(roomId) {
@@ -387,7 +392,6 @@
                     objectLayer.innerHTML = '';
                 }
             });
-            setTimeout(resizeBoard, 50);
         }
 
         document.getElementById('btnCreateRoom').addEventListener('click', () => {
@@ -400,13 +404,13 @@
             if(inputId) switchRoom(inputId);
         });
 
-        // --- DOKUNMATİK ÇİZİM MOTORU (KOORDİNAT DENGELİ) ---
+        // --- HASSAS KOORDİNAT ESŞİTLEME MOTORU ---
         function getMousePos(e) {
             const rect = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             
-            // 🎯 Ekranda küçülen canvas koordinatlarını mantıksal 800x400 uzayına oranla geri dönüştürür.
+            // 🎯 Ekran boyutu ne olursa olsun, dokunulan yeri 800x400'lük sanal matrise oranlar
             return { 
                 x: (clientX - rect.left) * (canvas.width / rect.width), 
                 y: (clientY - rect.top) * (canvas.height / rect.height) 
@@ -416,7 +420,7 @@
         function startDrawing(e) {
             isDrawing = true;
             lastPos = getMousePos(e);
-            if(e.touches) e.preventDefault();
+            if(e.touches && e.touches.length === 1) e.preventDefault();
         }
 
         function draw(e) {
@@ -435,7 +439,7 @@
             }
 
             lastPos = currentPos;
-            if(e.touches) e.preventDefault();
+            if(e.touches && e.touches.length === 1) e.preventDefault();
         }
 
         function drawLineLocal(x1, y1, x2, y2, color, size, tool) {
@@ -464,7 +468,7 @@
         canvas.addEventListener('touchmove', draw, {passive: false});
         window.addEventListener('touchend', () => isDrawing = false);
 
-        // --- SÜRÜKLE BIRAK MOTORU (MOBİL UYUMLU) ---
+        // --- SÜRÜKLE BIRAK MOTORU (YÜZDESEL % KONUMLANDIRMA) ---
         let draggedText = '';
         let draggedClass = '';
 
@@ -483,16 +487,15 @@
         container.addEventListener('drop', (e) => {
             e.preventDefault();
             const rect = container.getBoundingClientRect();
-            // Oranlı koordinat eşitleme
             const x = (e.clientX - rect.left) * (800 / rect.width);
             const y = (e.clientY - rect.top) * (400 / rect.height);
             addTokenRequest(x, y, draggedText, draggedClass);
         });
 
-        // Mobil yedek tıkla-bırak desteği: Dokununca merkeze yaklaştırır
+        // Mobilde butona tıklayınca sahne ortasına ekleme kolaylığı
         document.querySelectorAll('.robot-token').forEach(token => {
             token.addEventListener('touchend', () => {
-                if(window.innerWidth <= 768) {
+                if(window.innerWidth <= 950) {
                     addTokenRequest(400 + (Math.random()*60-30), 200 + (Math.random()*60-30), draggedText, draggedClass);
                 }
             });
@@ -521,8 +524,10 @@
             const tokenEl = document.createElement('div');
             tokenEl.className = `placed-token ${customClass}`;
             tokenEl.innerText = text;
-            tokenEl.style.left = `${x}px`;
-            tokenEl.style.top = `${y}px`;
+            
+            // 🎯 KRİTİK DEĞİŞİKLİK: Piksel yerine Yüzdesel (%) yerleşim yaparak kaymayı sıfırlıyoruz
+            tokenEl.style.left = `${(x / 800) * 100}%`;
+            tokenEl.style.top = `${(y / 400) * 100}%`;
 
             tokenEl.addEventListener('pointerdown', (e) => {
                 tokenEl.setPointerCapture(e.pointerId);
@@ -530,7 +535,6 @@
                 
                 function onPointerMove(ev) {
                     const rect = container.getBoundingClientRect();
-                    // Oranlı kaydırma koordinat hesabı
                     let nx = (ev.clientX - rect.left) * (800 / rect.width);
                     let ny = (ev.clientY - rect.top) * (400 / rect.height);
 
@@ -540,8 +544,8 @@
                     if(currentRoomId) {
                         update(ref(database, `rooms/${currentRoomId}/tokens/${id}`), { x: nx, y: ny });
                     } else {
-                        tokenEl.style.left = `${nx}px`;
-                        tokenEl.style.top = `${ny}px`;
+                        tokenEl.style.left = `${(nx / 800) * 100}%`;
+                        tokenEl.style.top = `${(ny / 400) * 100}%`;
                     }
                 }
 
@@ -570,7 +574,7 @@
             objectLayer.appendChild(tokenEl);
         }
 
-        // --- ARABİRİM BUTONLARI ---
+        // --- ARABİRİM KONTROLLERİ ---
         document.getElementById('toolPencil').addEventListener('click', () => { currentTool = 'pencil'; toggleToolBtn('toolPencil'); });
         document.getElementById('toolEraser').addEventListener('click', () => { currentTool = 'eraser'; toggleToolBtn('toolEraser'); });
         
